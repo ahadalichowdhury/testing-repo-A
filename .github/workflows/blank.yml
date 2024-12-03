@@ -3,37 +3,33 @@ name: Sync to Account B Repo
 on:
   push:
     branches:
-      - main  # Track changes on the main branch
+      - main
 
 jobs:
   sync:
     runs-on: ubuntu-latest
-
+    
     steps:
     - name: Checkout source repository
       uses: actions/checkout@v3
       with:
         ref: main
+        token: ${{ secrets.TARGET_REPO_PAT }}
+        fetch-depth: 0
         
     - name: Configure Git
+      env:
+        TARGET_REPO_PAT: ${{ secrets.TARGET_REPO_PAT }}
       run: |
         git config --global user.name "ahadalichowdhury"
         git config --global user.email "smahadalichowdhury@gmail.com"
+        echo "https://ahadalichowdhury:${{ secrets.TARGET_REPO_PAT }}@github.com" > ~/.git-credentials
+        git config --global credential.helper store
 
-    - name: Set up target repository remote
+    - name: Push to target repository
       env:
         TARGET_REPO_PAT: ${{ secrets.TARGET_REPO_PAT }}
       run: |
-        git remote add target-repo "https://${{ secrets.TARGET_REPO_PAT }}@github.com/ahadalichowdhury/testing-repo-A.git"
-        git remote -v  # Verify remote URL
-
-    - name: Fetch and merge from target repository
-      run: |
+        git remote add target-repo "https://ahadalichowdhury:${{ secrets.TARGET_REPO_PAT }}@github.com/ahadalichowdhury/testing-repo-A.git"
         git fetch target-repo
-        git merge target-repo/main --allow-unrelated-histories || true  # Merge existing code from Repo B
-
-    - name: Push changes to target repository
-      env:
-        TARGET_REPO_PAT: ${{ secrets.TARGET_REPO_PAT }}
-      run: |
-        git push target-repo HEAD:main
+        git push -u target-repo main:main --force
