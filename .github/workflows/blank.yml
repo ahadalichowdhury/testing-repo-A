@@ -23,14 +23,19 @@ jobs:
     - name: Debug Git Remote
       run: |
         echo "https://$TARGET_REPO_PAT@github.com/ahadalichowdhury/testing-repo-A.git"
-        git remote add target-repo https://$TARGET_REPO_PAT@github.com/ahadalichowdhury/testing-repo-A.git
-        git remote -v
+        git remote -v  # Show current remotes
 
-    - name: Add and pull target repository
+    - name: Set up target repository remote
       env:
         TARGET_REPO_PAT: ${{ secrets.TARGET_REPO_PAT }}
       run: |
-        git remote add target-repo https://$TARGET_REPO_PAT@github.com/ahadalichowdhury/testing-repo-A.git
+        git remote get-url target-repo || git remote add target-repo https://$TARGET_REPO_PAT@github.com/ahadalichowdhury/testing-repo-A.git
+        git remote -v  # Verify remote URL
+
+    - name: Fetch and merge from target repository
+      env:
+        TARGET_REPO_PAT: ${{ secrets.TARGET_REPO_PAT }}
+      run: |
         git fetch target-repo
         git merge target-repo/main --allow-unrelated-histories  # Merge existing code from Repo B
 
