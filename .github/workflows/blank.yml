@@ -14,32 +14,23 @@ jobs:
       uses: actions/checkout@v3
       with:
         ref: main
-    - name: Verify Token
-      run: echo "Token is ${{ secrets.TARGET_REPO_PAT }}"
-
+        
     - name: Configure Git
       run: |
         git config --global user.name "ahadalichowdhury"
         git config --global user.email "smahadalichowdhury@gmail.com"
 
-    - name: Debug Git Remote
-      run: |
-        echo "https://$TARGET_REPO_PAT@github.com/ahadalichowdhury/testing-repo-A.git"
-        git remote -v  # Show current remotes
-
     - name: Set up target repository remote
       env:
         TARGET_REPO_PAT: ${{ secrets.TARGET_REPO_PAT }}
       run: |
-        git remote get-url target-repo || git remote add target-repo https://$TARGET_REPO_PAT@github.com/ahadalichowdhury/testing-repo-A.git
+        git remote add target-repo "https://${{ secrets.TARGET_REPO_PAT }}@github.com/ahadalichowdhury/testing-repo-A.git"
         git remote -v  # Verify remote URL
 
     - name: Fetch and merge from target repository
-      env:
-        TARGET_REPO_PAT: ${{ secrets.TARGET_REPO_PAT }}
       run: |
         git fetch target-repo
-        git merge target-repo/main --allow-unrelated-histories  # Merge existing code from Repo B
+        git merge target-repo/main --allow-unrelated-histories || true  # Merge existing code from Repo B
 
     - name: Push changes to target repository
       env:
