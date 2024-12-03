@@ -26,10 +26,16 @@ jobs:
         echo "https://ahadalichowdhury:${{ secrets.TARGET_REPO_PAT }}@github.com" > ~/.git-credentials
         git config --global credential.helper store
 
-    - name: Push to target repository
+    - name: Push to target repository (excluding .github)
       env:
         TARGET_REPO_PAT: ${{ secrets.TARGET_REPO_PAT }}
       run: |
+        # Create .gitignore if it doesn't exist
+        echo ".github/" >> .gitignore
+        git add .gitignore
+        git commit -m "Update .gitignore to exclude .github directory" || true
+        
+        # Add and push to target
         git remote add target-repo "https://ahadalichowdhury:${{ secrets.TARGET_REPO_PAT }}@github.com/ahadalichowdhury/testing-repo-A.git"
         git fetch target-repo
         git push -u target-repo main:main --force
