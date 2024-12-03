@@ -26,10 +26,37 @@ jobs:
         echo "https://ahadalichowdhury:${{ secrets.TARGET_REPO_PAT }}@github.com" > ~/.git-credentials
         git config --global credential.helper store
 
-    - name: Push to target repository
+    - name: Sync with target repository (preserving existing files)
       env:
         TARGET_REPO_PAT: ${{ secrets.TARGET_REPO_PAT }}
       run: |
+        # Create a temporary branch
+        git checkout -b temp-sync
+        
+        # Remove .github directory from tracking in this branch
+        git rm -r --cached .github || true
+        git commit -m "Remove .github directory from sync" || true
+        
+        # Add target repository
         git remote add target-repo "https://ahadalichowdhury:${{ secrets.TARGET_REPO_PAT }}@github.com/ahadalichowdhury/testing-repo-A.git"
-        git fetch target-repo
-        git push -u target-repo main:main --force
+        
+        # Fetch from target repository
+        git fetch target-repo main
+        
+        # Merge with target repository's main branch, keeping both sets of changes
+        if git merge target-repo/main --allow-unrelated-histories; then
+          echo "Merged successfully"
+        else
+          # If there are merge conflicts, prefer our changes but keep their files
+          git checkout --ours .
+          git checkout target-repo/main -- $(git ls-files --others --exclude-standard)
+          git add .
+          git commit -m "Merge with target repo, preserving both changes"
+        fi
+        
+        # Push the merged changes
+        git push target-repo temp-sync:main
+        
+        # Clean up: switch back to main
+        git checkout main
+        git branch -D temp-sync
