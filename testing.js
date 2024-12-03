@@ -1,3 +1,3 @@
 let name= "ahad"
 console.log(name)
-let country = "bangladesh is small"
+let country = "bangladesh"
